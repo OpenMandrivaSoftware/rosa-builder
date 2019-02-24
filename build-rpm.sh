@@ -49,6 +49,7 @@ extra_cfg_urpm_options="$EXTRA_CFG_URPM_OPTIONS"
 save_buildroot="$SAVE_BUILDROOT"
 use_extra_tests="$USE_EXTRA_TESTS"
 rerun_tests="$RERUN_TESTS"
+commit_hash="$COMMIT_HASH"
 # list of packages for tests relaunch
 packages="$PACKAGES"
 
@@ -470,13 +471,15 @@ do
     rm -rf ${HOME}/${PACKAGE:?}
 # checkout specific branch/tag if defined
     if [ ! -z "$project_version" ]; then
-# (tpg) clone only history of 100 commits to reduce bandwith
-	git clone --depth 100 -b $project_version $git_repo ${HOME}/${PACKAGE}
+	git clone --depth 10 -b $project_version $git_repo ${HOME}/${PACKAGE}
 	pushd ${HOME}/${PACKAGE}
 	git rev-parse HEAD > ${HOME}/commit_hash
 	popd
     else
-	git clone --depth 100 $git_repo ${HOME}/${PACKAGE}
+	git clone --depth 10 $git_repo ${HOME}/${PACKAGE}
+	pushd ${HOME}/${PACKAGE}
+		git checkout $commit_hash
+	popd
     fi
     rc=$?
     try_reclone=false
