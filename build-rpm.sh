@@ -471,12 +471,12 @@ do
     rm -rf ${HOME}/${PACKAGE:?}
 # checkout specific branch/tag if defined
     if [ ! -z "$project_version" ]; then
-	git clone --depth 10 -b $project_version $git_repo ${HOME}/${PACKAGE}
+	git clone -b $project_version $git_repo ${HOME}/${PACKAGE}
 	pushd ${HOME}/${PACKAGE}
 	git rev-parse HEAD > ${HOME}/commit_hash
 	popd
     else
-	git clone --depth 10 $git_repo ${HOME}/${PACKAGE}
+	git clone $git_repo ${HOME}/${PACKAGE}
 	pushd ${HOME}/${PACKAGE}
 		git checkout $commit_hash
 	popd
