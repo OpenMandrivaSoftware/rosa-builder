@@ -12,7 +12,7 @@ sudo rm -rf /var/lib/mock-urpm/*
 #rm -fv ~/build_fail_reason.log
 
 # (tpg) remove package
-rm -rf "${HOME}/${PACKAGE}"
+rm -rf "${HOME}/${PACKAGE:?}"
 # (tpg) remove old files
 # in many cases these are leftovers when build fails
 # would be nice to remove them to free disk space
@@ -292,7 +292,7 @@ try_rebuild=true
 retry=0
 while $try_rebuild
 do
-    rm -rf "$OUTPUT_FOLDER"
+    rm -rf "${OUTPUT_FOLDER}"
     if [ "${CACHED_CHROOT_SHA1}" != '' ]; then
 	echo "--> Uses cached chroot with sha1 '$CACHED_CHROOT_SHA1'..."
 	$MOCK_BIN --chroot "urpmi.removemedia -a"
@@ -467,7 +467,7 @@ try_reclone=true
 retry=0
 while $try_reclone
 do
-    rm -rf ${HOME}/${PACKAGE}
+    rm -rf ${HOME}/${PACKAGE:?}
 # checkout specific branch/tag if defined
     if [ ! -z "$project_version" ]; then
 # (tpg) clone only history of 100 commits to reduce bandwith
@@ -507,4 +507,4 @@ download_cache
 build_rpm
 container_data
 # wipe package
-rm -rf ${HOME}/${PACKAGE}
+rm -rf ${HOME}/${PACKAGE:?}
