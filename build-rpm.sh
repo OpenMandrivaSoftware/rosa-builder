@@ -161,10 +161,10 @@ esac
 if [ "$platform_arch" = 'aarch64' ]; then
     if [ $cpu != "aarch64" ] ; then
 # hack to copy qemu binary in non-existing path
-	(while [ ! -e  /var/lib/mock-urpm/openmandriva-$platform_arch/root/usr/bin/ ]
+	(while [ ! -e  /var/lib/mock-urpm/$platform_name-$platform_arch/root/usr/bin/ ]
 	do sleep 1; done
 	# rebuild docker builder with qemu packages
-	sudo cp /usr/bin/qemu-static-aarch64 /var/lib/mock-urpm/openmandriva-$platform_arch/root/usr/bin/) &
+	sudo cp /usr/bin/qemu-static-aarch64 /var/lib/mock-urpm/$platform_name-$platform_arch/root/usr/bin/) &
 	subshellpid=$!
     fi
 # remove me in future
@@ -174,9 +174,9 @@ fi
 if [ "$platform_arch" = 'armv7hl' ]; then
     if [ $cpu != "arm" ] || [ $cpu != "aarch64" ] ; then
 # hack to copy qemu binary in non-existing path
-	(while [ ! -e  /var/lib/mock-urpm/openmandriva-$platform_arch/root/usr/bin/ ]
+	(while [ ! -e  /var/lib/mock-urpm/$platform_name-$platform_arch/root/usr/bin/ ]
 	do sleep 1; done
-	sudo cp /usr/bin/qemu-static-arm /var/lib/mock-urpm/openmandriva-$platform_arch/root/usr/bin/) &
+	sudo cp /usr/bin/qemu-static-arm /var/lib/mock-urpm/$platform_name-$platform_arch/root/usr/bin/) &
 	subshellpid=$!
     fi
 # remove me in future
@@ -375,11 +375,11 @@ echo '--> Done.'
 echo "--> Grepping rpmlint logs from $OUTPUT_FOLDER/build.log to $OUTPUT_FOLDER/rpmlint.log"
 sed -n "/Executing \"\/usr\/bin\/rpmlint/,/packages and.*specfiles checked/p" $OUTPUT_FOLDER/build.log > $OUTPUT_FOLDER/rpmlint.log
 echo '--> Create rpm -qa list'
-rpm --root=/var/lib/mock-urpm/openmandriva-$platform_arch/root/ -qa >> $OUTPUT_FOLDER/rpm-qa.log
+rpm --root=/var/lib/mock-urpm/$platform_name-$platform_arch/root/ -qa >> $OUTPUT_FOLDER/rpm-qa.log
 
 # (tpg) Save build chroot
 if [ "${rc}" != 0 ] && [ "${save_buildroot}" = 'true' ]; then
-    sudo tar --exclude=root/dev -zcvf "${OUTPUT_FOLDER}"/rpm-buildroot.tar.gz /var/lib/mock-urpm/openmandriva-$platform_arch/root/
+    sudo tar --exclude=root/dev -zcvf "${OUTPUT_FOLDER}"/rpm-buildroot.tar.gz /var/lib/mock-urpm/$platform_name-$platform_arch/root/
 fi
 
 # Test RPM files
