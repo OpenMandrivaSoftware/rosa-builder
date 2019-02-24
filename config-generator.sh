@@ -51,7 +51,7 @@ fi
 
 cat <<EOF>> $default_cfg
 config_opts['root'] = '$platform_name-$platform_arch'
-config_opts['chroot_setup'] = 'basesystem-minimal basesystem-build branding-configs-fresh-2.0'
+config_opts['chroot_setup'] = 'basesystem-minimal basesystem-build'
 #config_opts['urpm_options'] = '--xml-info=never $extra_cfg_urpm_options'
 
 # If it's True - current urpmi configs will be copied to the chroot.
