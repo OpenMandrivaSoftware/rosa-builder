@@ -3,7 +3,7 @@
 Clone repository
 
 ```bash
-git clone https://github.com/OpenMandrivaSoftware/docker-builder.git
+git clone https://github.com/OpenMandrivaSoftware/rosa-builder.git
 ```
 Create builder image:
 
@@ -11,6 +11,9 @@ Create builder image:
 cd docker-builder
 docker build --tag=openmandriva/builder --file $HOME/docker-builder/Dockerfile.builder .
 ```
+
+## Repo with mkimage-urpmi.sh
+https://github.com/mikhailnov/docker-rosa/
 
 ## Remove stopped containers
 ```bash
