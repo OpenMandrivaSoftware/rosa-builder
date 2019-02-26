@@ -8,8 +8,8 @@ git clone https://github.com/OpenMandrivaSoftware/rosa-builder.git
 Create builder image:
 
 ```bash
-cd docker-builder
-docker build --tag=openmandriva/builder --file $HOME/docker-builder/Dockerfile.builder .
+cd rosa-builder
+docker build --tag=rosalab/builder:2016 --file Dockerfile.builder .
 ```
 
 ## Repo with mkimage-urpmi.sh
