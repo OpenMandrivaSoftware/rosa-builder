@@ -59,9 +59,6 @@ if [ "$(uname -m)" = 'x86_64' ] && echo "$platform_arch" |grep -qE 'i[0-9]86'; t
     MOCK_BIN="/usr/bin/i386 $MOCK_BIN"
 fi
 
-echo '--> Mounting tmpfs filesystem to builddir'
-sudo mount -a
-
 generate_config() {
 # Change output format for mock-urpm
 sed '17c/format: %(message)s' $config_dir/logging.ini > ~/logging.ini
