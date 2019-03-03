@@ -100,7 +100,7 @@ for rpm in ${OUTPUT_FOLDER}/*.rpm; do
 	release=${nevr[3]}
 
 	dep_list=""
-	[[ ! "${fullname}" =~ ".*src.rpm$" ]] && dep_list=`urpmq --whatrequires ${name} | sort -u | xargs urpmq --sourcerpm | cut -d\  -f2 | rev | cut -f3- -d- | rev | sort -u | grep -v "^${project_name}$" | xargs echo`
+	[[ ! "${fullname}" =~ ".*src.rpm$" ]] && dep_list=`sudo urpmq --whatrequires --sourcerpm "${name}" | cut -d\  -f2 | rev | cut -f3- -d- | rev | sort -u | grep -v "^${project_name}$" | xargs echo`
 	sha1=`sha1sum ${rpm} | awk '{ print $1 }'`
 
 	echo "--> dep_list for '${name}':"
