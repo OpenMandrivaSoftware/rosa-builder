@@ -287,7 +287,7 @@ if [ "$rerun_tests" = 'true' ]; then
     return 0
 fi
 
-spec_name=`ls -1 | grep '.spec$'`
+spec_name=`ls -1 $build_package | grep '.spec$'`
 echo '--> Build src.rpm'
 try_rebuild=true
 retry=0
