@@ -376,7 +376,8 @@ echo '--> Done.'
 echo "--> Grepping rpmlint logs from $OUTPUT_FOLDER/build.log to $OUTPUT_FOLDER/rpmlint.log"
 sed -n "/Executing \"\/usr\/bin\/rpmlint/,/packages and.*specfiles checked/p" $OUTPUT_FOLDER/build.log > $OUTPUT_FOLDER/rpmlint.log
 echo '--> Create rpm -qa list'
-rpm --root=/var/lib/mock-urpm/$platform_name-$platform_arch/root/ -qa >> $OUTPUT_FOLDER/rpm-qa.log
+CHROOT_PATH=$($MOCK_BIN --configdir=$config_dir --print-root-path)
+rpm --root=$CHROOT_PATH -qa >> $OUTPUT_FOLDER/rpm-qa.log
 
 # (tpg) Save build chroot
 if [ "${rc}" != 0 ] && [ "${save_buildroot}" = 'true' ]; then
