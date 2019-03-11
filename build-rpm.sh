@@ -276,6 +276,8 @@ arm_platform_detector
 # We will rerun the build in case when repository is modified in the middle,
 # but for safety let's limit number of retest attempts
 # (since in case when repository metadata is really broken we can loop here forever)
+
+
 MAX_RETRIES=10
 WAIT_TIME=60
 RETRY_GREP_STR="You may need to update your urpmi database\|problem reading synthesis file of medium\|retrieving failed: "
@@ -285,6 +287,7 @@ if [ "$rerun_tests" = 'true' ]; then
     return 0
 fi
 
+spec_name=`ls -1 | grep '.spec$'`
 echo '--> Build src.rpm'
 try_rebuild=true
 retry=0
@@ -307,9 +310,9 @@ do
 		sleep ${WAIT_TIME}
 	    fi
 	fi
-	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${PACKAGE}.spec --sources=$build_package --no-cleanup-after --no-clean $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
+	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after --no-clean $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
     else
-	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${PACKAGE}.spec --sources=$build_package --no-cleanup-after $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
+	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
     fi
 
     rc=${PIPESTATUS[0]}
