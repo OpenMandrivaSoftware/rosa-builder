@@ -287,6 +287,8 @@ if [ "$rerun_tests" = 'true' ]; then
     return 0
 fi
 
+sudo touch -d "23 hours ago" $config_dir/default.cfg
+
 spec_name=`ls -1 $build_package | grep '.spec$'`
 echo '--> Build src.rpm'
 try_rebuild=true

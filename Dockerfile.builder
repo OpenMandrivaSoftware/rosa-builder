@@ -17,4 +17,5 @@ RUN urpmi --auto --auto-update --no-verify-rpm \
  && rm -rf /usr/share/man/ /usr/share/cracklib /usr/share/doc
 
 COPY builder.conf /etc/builder-c/
-ENTRYPOINT ["/usr/bin/valgrind", "--undef-value-errors=no", "/usr/bin/builder"]
+ENTRYPOINT ["/usr/bin/builder"]
+#ENTRYPOINT ["/usr/bin/valgrind", "--undef-value-errors=no", "/usr/bin/builder"]
