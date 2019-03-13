@@ -387,7 +387,9 @@ if [ "${rc}" != 0 ] && [ "${save_buildroot}" = 'true' ]; then
 fi
 
 # Test RPM files
-test_rpm
+if [ "$use_extra_tests" = 'true' ]; then
+    test_rpm
+fi
 # End tests
 
 }
