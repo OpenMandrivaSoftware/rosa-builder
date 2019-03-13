@@ -348,6 +348,8 @@ try_rebuild=true
 retry=0
 while $try_rebuild
 do
+    $MOCK_BIN --chroot "urpmi.removemedia -a"
+    $MOCK_BIN --readdrepo -v --configdir $config_dir
     $MOCK_BIN -v --configdir=$config_dir --rebuild $OUTPUT_FOLDER/*.src.rpm --no-cleanup-after --no-clean $extra_build_rpm_options --resultdir=$OUTPUT_FOLDER
     rc=${PIPESTATUS[0]}
     try_rebuild=false
