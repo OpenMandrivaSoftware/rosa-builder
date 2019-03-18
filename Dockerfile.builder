@@ -6,9 +6,6 @@ RUN urpmi --auto --auto-update --no-verify-rpm \
  && urpmi.addmedia builder http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/main/testing/ \
  && urpmi.addmedia debug_main_rel http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/debug_main/release/ \
  && urpmi.addmedia debug_main_up http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/debug_main/updates/ \
- && urpmi.addmedia debug_builder http://abf-downloads.rosalinux.ru/rosa2016.1/container/2965189/x86_64/debug_main/release/ \
- && urpmi.addmedia debug_curl http://abf-downloads.rosalinux.ru/rosa2016.1/container/2961746/x86_64/debug_main/release/ \
- && urpmi.addmedia debug_ssl http://abf-downloads.rosalinux.ru/rosa2016.1/container/2963511/x86_64/debug_main/release/ \
  && urpmi --no-suggests --no-verify-rpm --auto mock-urpm git valgrind curl sudo builder-c xz timezone builder-c-debuginfo openssl-debuginfo curl-debuginfo \
  && sed -i 's!openmandriva.org!rosalinux.ru!g' /etc/builder-c/filestore_upload.sh \
  && sed -i 's!file-store!abf-n-file-store!g' /etc/builder-c/filestore_upload.sh \

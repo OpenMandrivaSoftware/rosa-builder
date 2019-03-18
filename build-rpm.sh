@@ -504,7 +504,8 @@ pushd ${HOME}/${PACKAGE}
 # count number of specs (should be 1)
 find_spec
 # check for excludearch or exclusivearch
-validate_arch
+# rework me
+#validate_arch
 # download sources from .abf.yml
 /bin/bash /mdv/download_sources.sh
 popd
