@@ -486,6 +486,7 @@ do
     else
 	git clone $git_repo ${HOME}/${PACKAGE}
 	pushd ${HOME}/${PACKAGE}
+		echo ${commit_hash} > ${HOME}/commit_hash
 		git checkout $commit_hash
 	popd
     fi
