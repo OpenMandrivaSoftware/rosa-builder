@@ -1,5 +1,5 @@
 #!/bin/bash
-echo 'OpenMandriva platform config generator'
+echo 'RosaLAB platform config generator'
 
 extra_cfg_options="$EXTRA_CFG_OPTIONS"
 extra_cfg_urpm_options="$EXTRA_CFG_URPM_OPTIONS"
@@ -39,7 +39,7 @@ config_opts['plugin_conf']['ccache_enable'] = False
 config_opts['use_system_media'] = False
 config_opts['basedir'] = '/var/lib/mock-urpm/'
 config_opts['cache_topdir'] = '/var/cache/mock-urpm/'
-config_opts['dist'] = 'rosa2016.1'  # only useful for --resultdir variable subst
+config_opts['dist'] = '${platform_name}'  # only useful for --resultdir variable subst
 config_opts['macros']['%packager'] = '$uname <$email>'
 config_opts["urpmi_media"] = {
 EOF
