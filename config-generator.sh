@@ -39,7 +39,7 @@ config_opts['plugin_conf']['ccache_enable'] = False
 
 config_opts['plugin_conf']['tmpfs_enable'] = True
 config_opts['plugin_conf']['tmpfs_opts'] = {}
-config_opts['plugin_conf']['tmpfs_opts']['required_ram_mb'] = 64000m
+config_opts['plugin_conf']['tmpfs_opts']['required_ram_mb'] = 64000
 config_opts['plugin_conf']['tmpfs_opts']['max_fs_size'] = '50g'
 
 config_opts['use_system_media'] = False
