@@ -36,6 +36,12 @@ config_opts['plugin_conf']['root_cache_enable'] = False
 config_opts['plugin_conf']['root_cache_opts']['age_check'] = True
 config_opts['plugin_conf']['root_cache_opts']['max_age_days'] = 2
 config_opts['plugin_conf']['ccache_enable'] = False
+
+config_opts['plugin_conf']['tmpfs_enable'] = True
+config_opts['plugin_conf']['tmpfs_opts'] = {}
+config_opts['plugin_conf']['tmpfs_opts']['required_ram_mb'] = 64000m
+config_opts['plugin_conf']['tmpfs_opts']['max_fs_size'] = '50g'
+
 config_opts['use_system_media'] = False
 config_opts['basedir'] = '/var/lib/mock-urpm/'
 config_opts['cache_topdir'] = '/var/cache/mock-urpm/'
