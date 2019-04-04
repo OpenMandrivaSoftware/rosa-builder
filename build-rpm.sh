@@ -417,12 +417,9 @@ fi
 validate_arch() {
 # check if spec file have set ExcludeArch or ExclusiveArch against build arch target
     BUILD_TYPE=`grep -i '^excludearch:.*$\|^exclusivearch:.*$' *.spec | awk -F'[:]' '{print $1}'`
-
 # check if spec file have both ExcludeArch and ExclusiveArch set up
     [[ ${#BUILD_TYPE} -gt 15 ]] && echo "Spec file has set ExcludeArch and ExclusiveArch. Exiting!" && exit 1
-
     SPEC_ARCH=(`grep -i '^excludearch:.*$\|^exclusivearch:.*$' *.spec | awk -F'[[:blank:]]' '{$1="";print $0}' | sort -u`)
-
 # validate platform against spec file settings
     validate_build() {
 	local _PLATFORM=($1)
@@ -443,9 +440,7 @@ validate_arch() {
 	else
 	    echo "--> Spec validated for ExcludeArch and ExclusiveArch. Continue building."
     fi
-
 }
-
 # translate arch into various options that may be set up in spec file
     case ${PLATFORM_ARCH,,} in
 	armv7hl)
@@ -506,7 +501,7 @@ pushd ${HOME}/${PACKAGE}
 find_spec
 # check for excludearch or exclusivearch
 # rework me
-#validate_arch
+validate_arch
 # download sources from .abf.yml
 /bin/bash /mdv/download_sources.sh
 popd
