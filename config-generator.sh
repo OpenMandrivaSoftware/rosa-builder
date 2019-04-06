@@ -32,9 +32,9 @@ config_opts['urpm_options'] = '$extra_cfg_urpm_options'
 config_opts['root'] = '$platform_name-$platform_arch'
 config_opts['chroot_setup'] = 'basesystem-minimal basesystem-build xz timezone'
 #config_opts['urpm_options'] = '--xml-info=never $extra_cfg_urpm_options'
-config_opts['plugin_conf']['root_cache_enable'] = False
+config_opts['plugin_conf']['root_cache_enable'] = True
 config_opts['plugin_conf']['root_cache_opts']['age_check'] = True
-config_opts['plugin_conf']['root_cache_opts']['max_age_days'] = 2
+config_opts['plugin_conf']['root_cache_opts']['max_age_days'] = 1
 config_opts['plugin_conf']['ccache_enable'] = False
 
 config_opts['plugin_conf']['tmpfs_enable'] = False
