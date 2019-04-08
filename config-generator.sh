@@ -27,7 +27,7 @@ echo '}' >> $default_cfg
 cat <<EOF> $default_cfg
 config_opts['target_arch'] = '$platform_arch --without uclibc'
 config_opts['legal_host_arches'] = ('i586', 'i686', 'x86_64')
-config_opts['urpmi_options'] = '--no-suggests --no-verify-rpm --ignoresize --excludedocs --downloader wget --fastunsafe --nolock $extra_cfg_options'
+config_opts['urpmi_options'] = '--no-suggests --no-verify-rpm --ignoresize --downloader wget --fastunsafe --nolock $extra_cfg_options'
 config_opts['urpm_options'] = '$extra_cfg_urpm_options'
 config_opts['root'] = '$platform_name-$platform_arch'
 config_opts['chroot_setup'] = 'basesystem-minimal basesystem-build xz timezone'
