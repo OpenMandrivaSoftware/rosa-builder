@@ -368,6 +368,10 @@ echo '--> Create rpm -qa list'
 CHROOT_PATH="$($MOCK_BIN --configdir=$config_dir --print-root-path)"
 rpm --root="$CHROOT_PATH" -qa > "$OUTPUT_FOLDER/rpm-qa.log"
 
+# (tpg) Save build chroot
+if [ "${rc}" != 0 ] && [ "${save_buildroot}" = 'true' ]; then
+    sudo tar --exclude=root/dev -zcvf "${OUTPUT_FOLDER}"/rpm-buildroot.tar.gz /var/lib/mock-urpm/$platform_name-$platform_arch/root/
+fi
 # Check exit code after build
 if [ $rc != 0 ]; then
     echo '--> Build failed: mock-urpm encountered a problem.'
@@ -384,10 +388,6 @@ echo '--> Done.'
 echo "--> Grepping rpmlint logs from $OUTPUT_FOLDER/build.log to $OUTPUT_FOLDER/rpmlint.log"
 sed -n "/Executing \"\/usr\/bin\/rpmlint/,/packages and.*specfiles checked/p" $OUTPUT_FOLDER/build.log > $OUTPUT_FOLDER/rpmlint.log
 
-# (tpg) Save build chroot
-if [ "${rc}" != 0 ] && [ "${save_buildroot}" = 'true' ]; then
-    sudo tar --exclude=root/dev -zcvf "${OUTPUT_FOLDER}"/rpm-buildroot.tar.gz /var/lib/mock-urpm/$platform_name-$platform_arch/root/
-fi
 
 # Test RPM files
 if [ "$use_extra_tests" = 'true' ]; then
