@@ -188,7 +188,7 @@ probe_cpu
 test_rpm() {
 # Rerun tests
     PACKAGES=${packages} \
-    chroot_path=$chroot_path \
+    chroot_path="$($MOCK_BIN --configdir=$config_dir --print-root-path)" \
     use_extra_tests=$use_extra_tests
 
     test_code=0
@@ -205,7 +205,7 @@ test_rpm() {
 	echo "--> Re-running tests on `date -u`" >> $test_log
 	prefix='rerun-tests-'
 	arr=($packages)
-	cd "$build_package"
+	pushd "$build_package"
 	for package in ${arr[@]} ; do
 	    echo "--> Downloading '$package'..." >> $test_log
 	    wget http://file-store.rosalinux.ru/api/v1/file_stores/$package --content-disposition --no-check-certificate
@@ -215,23 +215,17 @@ test_rpm() {
 		    exit $rc
 		fi
 	    done
-	    cd ..
-# (tpg) TODO fix running tests with cached-chroot
-#	    if [ "${CACHED_CHROOT_SHA1}" != '' ]; then
-#	    	echo "--> Uses cached chroot with sha1 '$CACHED_CHROOT_SHA1'..." >> $test_log
-#	    	$MOCK_BIN --chroot "urpmi.removemedia -a"
-#		$MOCK_BIN --readdrepo -v --configdir $config_dir --no-cleanup-after --no-clean --update
-#	    else
-	    	$MOCK_BIN --init --configdir $config_dir -v --no-cleanup-after
-#	    fi
-
-	    OUTPUT_FOLDER="$build_package"
-	fi
+	popd
+	OUTPUT_FOLDER="$build_package"
+    fi
 
 	echo '--> Checking if rpm packages can be installed.' >> $test_log
 	$MOCK_BIN -v --init --configdir $config_dir $OUTPUT_FOLDER/*.src.rpm >> "${test_log}".tmp
 	$MOCK_BIN -v --init --configdir $config_dir --install $(ls "$OUTPUT_FOLDER"/*.rpm | grep -v .src.rpm) >> "${test_log}".tmp 2>&1
+
 	cat $test_log.tmp >> $test_log
+	echo '--> Checking if same or newer version of the package already exists in repositories' >> $test_log 2>&1
+	python /mdv/check_newer_versions.py $chroot_path >> $test_log 2>&1
 	echo "--> Tests finished at `date -u`" >> $test_log
 	echo 'Test code output: ' $test_code >> $test_log 2>&1
 	rm -f $test_log.tmp
