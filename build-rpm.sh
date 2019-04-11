@@ -216,6 +216,7 @@ test_rpm() {
 		fi
 	    done
 	popd
+	$MOCK_BIN --init --configdir $config_dir -v --no-cleanup-after
 	OUTPUT_FOLDER="$build_package"
     fi
 
