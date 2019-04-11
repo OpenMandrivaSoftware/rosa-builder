@@ -25,7 +25,7 @@ ts.setVSFlags(~(rpm.RPMVSF_NEEDPAYLOAD))
 # if some of them fail the test
 exit_code = 0
 
-for pkg in glob.glob(chroot_path + "/*.rpm"):
+for pkg in glob.glob("/home/omv/output/*.rpm"):
     # Do not check src.srm
     # (can't exclude them in the glob expression above,
     #  since glob doesn't support exclusion patterns)
