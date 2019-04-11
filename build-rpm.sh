@@ -227,6 +227,7 @@ test_rpm() {
 	cat $test_log.tmp >> $test_log
 	echo '--> Checking if same or newer version of the package already exists in repositories' >> $test_log 2>&1
 	python /mdv/check_newer_versions.py $chroot_path >> $test_log 2>&1
+	test_code=$?
 	echo "--> Tests finished at `date -u`" >> $test_log
 	echo 'Test code output: ' $test_code >> $test_log 2>&1
 	rm -f $test_log.tmp
