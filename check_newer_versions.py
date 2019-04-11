@@ -68,7 +68,7 @@ for pkg in glob.glob("/home/omv/output/*.rpm"):
             print(existing_pkg)
             continue
 
-        res = rpm5utils.miscutils.compareDEVR( (distepoch, epoch, version, release), (ex_distepoch, ex_epoch, ex_version, ex_release) )
+        res = rpm5utils.miscutils.compareEVRD((distepoch, epoch, version, release), (ex_distepoch, ex_epoch, ex_version, ex_release))
         if res < 1:
             print(("A package with the same name (" + name + ") and same or newer version (" + evrd + ") already exists in repositories!"))
             exit_code = 1
