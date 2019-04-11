@@ -53,7 +53,7 @@ for pkg in glob.glob(chroot_path + "/*.rpm"):
     p = os.popen("sudo chroot " + chroot_path + " urpmq --wget --wget-options --auth-no-challenge --evrd " + name + " 2>&1 | sed 's/|/\\n/g'")
     for existing_pkg in p.readlines():
         if "Unknown option:" in existing_pkg:
-            print "This urpmq doesn't support --evrd option, the test will be skipped"
+            print("This urpmq doesn't support --evrd option, the test will be skipped")
             sys.exit(0)
 
         # existing_pkg should look like "name: epoch:version-release:distepoch"
@@ -65,12 +65,12 @@ for pkg in glob.glob(chroot_path + "/*.rpm"):
 	    (ex_version, ex_release) = evrd_array[1].split("-")
         except:
             # urpmq output line is not recognized - just print it "as is"
-            print existing_pkg
+            print(existing_pkg)
             continue
 
         res = rpm5utils.miscutils.compareDEVR( (distepoch, epoch, version, release), (ex_distepoch, ex_epoch, ex_version, ex_release) )
         if res < 1:
-            print "A package with the same name (" + name + ") and same or newer version (" + evrd + ") already exists in repositories!"
+            print(("A package with the same name (" + name + ") and same or newer version (" + evrd + ") already exists in repositories!"))
             exit_code = 1
             # Matching package has been found - no need to parse other lines of "urpmq --evrd"
             break

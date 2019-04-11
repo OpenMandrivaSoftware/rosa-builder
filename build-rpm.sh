@@ -186,7 +186,6 @@ probe_cpu
 }
 
 test_rpm() {
-   set -x
 # Rerun tests
     PACKAGES=${packages} \
     chroot_path="$($MOCK_BIN --configdir=$config_dir --print-root-path)" \
