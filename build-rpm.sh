@@ -229,33 +229,11 @@ test_rpm() {
 	fi
 
 	echo '--> Checking if rpm packages can be installed.' >> $test_log
-	TEST_CHROOT_PATH=$($MOCK_BIN --configdir=$config_dir --print-root-path)
-	sudo mkdir -p "${TEST_CHROOT_PATH}"/test_root
-	sudo cp "$OUTPUT_FOLDER"/*.rpm "${TEST_CHROOT_PATH}"/
-
-	try_retest=true
-	retry=0
-	while $try_retest
-	do
-	    sudo chroot "${TEST_CHROOT_PATH}" urpmi --split-length 0 --downloader wget --wget-options --auth-no-challenge -v --debug --no-verify-rpm --fastunsafe --no-suggests --buildrequires --test `ls  $TEST_CHROOT_PATH | grep rpm` --root test_root --auto > $test_log.tmp 2>&1
-	    test_code=$?
-	    try_retest=false
-	    if [[ $test_code != 0 && $retry < $MAX_RETRIES ]] ; then
-		if grep -q "$RETRY_GREP_STR" $test_log.tmp; then
-		    echo '--> Repository was changed in the middle, will rerun the tests' >> $test_log
-		    sleep ${WAIT_TIME}
-		    sudo chroot "${TEST_CHROOT_PATH}" urpmi.update -a >> $test_log 2>&1
-		    try_retest=true
-		    (( retry=$retry+1 ))
-		fi
-	    fi
-	done
-
+	$MOCK_BIN -v --init --configdir $config_dir $OUTPUT_FOLDER/*.src.rpm >> "${test_log}".tmp
+	$MOCK_BIN -v --init --configdir $config_dir --install $(ls "$OUTPUT_FOLDER"/*.rpm | grep -v .src.rpm) >> "${test_log}".tmp 2>&1
 	cat $test_log.tmp >> $test_log
 	echo "--> Tests finished at `date -u`" >> $test_log
 	echo 'Test code output: ' $test_code >> $test_log 2>&1
-	sudo rm -f  "${TEST_CHROOT_PATH}"/*.rpm
-	sudo rm -rf "${TEST_CHROOT_PATH}"/test_root
 	rm -f $test_log.tmp
 
 	# Check exit code after testing
