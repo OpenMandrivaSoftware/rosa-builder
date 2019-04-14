@@ -225,6 +225,9 @@ test_rpm() {
 	$MOCK_BIN -v --init --configdir $config_dir --install $(ls "$OUTPUT_FOLDER"/*.rpm | grep -v .src.rpm) >> "${test_log}" 2>&1
 	test_code=$?
 	if [ $test_code == 0 ]; then
+		# enable all repos first
+		# needed for debug packages mostly
+		python /mdv/enable_all_repos.py $chroot_path http://abf-downloads.rosalinux.ru/${platform_name}/repository/${platform_arch}/
 		echo '--> Checking if same or newer version of the package already exists in repositories' >> $test_log 2>&1
 		python /mdv/check_newer_versions.py $chroot_path >> $test_log 2>&1
 		test_code=$?
