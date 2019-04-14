@@ -25,7 +25,11 @@ ts.setVSFlags(~(rpm.RPMVSF_NEEDPAYLOAD))
 # if some of them fail the test
 exit_code = 0
 
-for pkg in glob.glob("/home/omv/output/*.rpm"):
+# exclude debuginfo package
+# glob don't know how to work with exclude pattern's
+# let's cheat it
+files = set(glob.glob("/home/omv/output/*.rpm")) - set(glob.glob("/home/omv/output/*debuginfo*"))
+for pkg in files:
     # Do not check src.srm
     # (can't exclude them in the glob expression above,
     #  since glob doesn't support exclusion patterns)
