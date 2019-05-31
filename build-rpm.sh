@@ -290,8 +290,11 @@ do
 	    fi
 	fi
 	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after --no-clean $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
+	python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
+	rc=$?; if [[ $rc != 0 ]]; then exit 6; fi
     else
 	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
+	python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
     fi
 
     rc=${PIPESTATUS[0]}
@@ -391,52 +394,6 @@ else
 fi
 }
 
-validate_arch() {
-# check if spec file have set ExcludeArch or ExclusiveArch against build arch target
-    BUILD_TYPE=`grep -i '^excludearch:.*$\|^exclusivearch:.*$' *.spec | awk -F'[:]' '{print $1}'`
-# check if spec file have both ExcludeArch and ExclusiveArch set up
-    [[ ${#BUILD_TYPE} -gt 15 ]] && echo "Spec file has set ExcludeArch and ExclusiveArch. Exiting!" && exit 1
-    SPEC_ARCH=(`grep -i '^excludearch:.*$\|^exclusivearch:.*$' *.spec | awk -F'[[:blank:]]' '{$1="";print $0}' | sort -u`)
-# validate platform against spec file settings
-    validate_build() {
-	local _PLATFORM=($1)
-# count for occurences
-	for item in ${SPEC_ARCH[@]}; do
-	    if [[ "${_PLATFORM[@]}" =~ "${item}" ]] ; then
-		FOUND_MATCH=1
-		echo "--> Found match of ${item} in ${_PLATFORM[@]} for ${BUILD_TYPE}"
-	    fi
-	done
-
-	if [ -n "${FOUND_MATCH}" -a "${BUILD_TYPE,,}" = "excludearch" ]; then
-	    echo "--> Build for this architecture is forbidden because of ${BUILD_TYPE} set in spec file!"
-	    exit 6
-	elif [ -z "${FOUND_MATCH}" -a "${BUILD_TYPE,,}" = "exclusivearch" ]; then
-	    echo "--> Build for this architecture is forbidden because of ${BUILD_TYPE} set in spec file!"
-	    exit 6
-	else
-	    echo "--> Spec validated for ExcludeArch and ExclusiveArch. Continue building."
-    fi
-}
-# translate arch into various options that may be set up in spec file
-    case ${PLATFORM_ARCH,,} in
-	armv7hl)
-		validate_build "armx %armx %{armx} armv7hl"
-		;;
-	aarch64)
-		validate_build "armx %armx %{armx} aarch64"
-		;;
-    i386|i586|i686)
-		validate_build "ix86 %ix86 %{ix86} i686 %i686 %{i686} i586 %i586 %{i586} i386 %i386 %{i386}"
-		;;
-	x86_64)
-		validate_build "x86_64 %x86_64 %{x86_64}"
-		;;
-	    *)
-		echo "--> ${BUILD_TYPE} validated."
-		;;
-    esac
-}
 
 clone_repo() {
 
@@ -476,9 +433,6 @@ done
 pushd ${HOME}/${PACKAGE}
 # count number of specs (should be 1)
 find_spec
-# check for excludearch or exclusivearch
-# rework me
-validate_arch
 # download sources from .abf.yml
 /bin/bash /mdv/download_sources.sh
 popd
