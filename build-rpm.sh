@@ -289,13 +289,13 @@ do
 		sleep ${WAIT_TIME}
 	    fi
 	fi
-	rc=${PIPESTATUS[0]}
 	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after --no-clean $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
+	rc=${PIPESTATUS[0]}
 	python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
 	if [[ $? -ne 0 ]]; then exit 6; fi
     else
-	rc=${PIPESTATUS[0]}
 	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
+	rc=${PIPESTATUS[0]}
 	python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
 	if [[ $? -ne 0 ]]; then exit 6; fi
     fi
