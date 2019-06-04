@@ -43,4 +43,3 @@ if exit_code == 1:
     print("The package has ExclusiveArch tag set, but the current architecture is not mentioned there")
 
 sys.exit(exit_code)
-
