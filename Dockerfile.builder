@@ -1,4 +1,4 @@
-FROM rosalab/rosa2016.1
+FROM rosalab/rosa2019.1
 
 RUN urpmi --auto --auto-update --no-verify-rpm \
  && rm -f /etc/localtime \
