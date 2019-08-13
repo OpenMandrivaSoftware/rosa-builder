@@ -290,17 +290,11 @@ do
 	    fi
 	fi
 	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after --no-clean $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
-	rc=${PIPESTATUS[0]}
-	python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
-	if [[ $? -ne 0 ]]; then exit 6; fi
     else
 	$MOCK_BIN -v --configdir=$config_dir --buildsrpm --spec=$build_package/${spec_name} --sources=$build_package --no-cleanup-after $extra_build_src_rpm_options --resultdir=$OUTPUT_FOLDER
-	if [[ $? -ne 0 ]]; then exit 1; fi
-#	rc=${PIPESTATUS[0]}
-#	python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
-#	if [[ $? -ne 0 ]]; then exit 6; fi
     fi
 
+    rc=${PIPESTATUS[0]}
     try_rebuild=false
     if [[ $rc != 0 && $retry < $MAX_RETRIES ]]; then
 	if grep -q "$RETRY_GREP_STR" $OUTPUT_FOLDER/root.log; then
@@ -325,6 +319,13 @@ if [ $rc != 0 ] || [ ! -e $OUTPUT_FOLDER/*.src.rpm ]; then
 fi
 
 echo '--> src.rpm build has been done successfully.'
+
+python /mdv/check_arch.py "${OUTPUT_FOLDER}"/*.src.rpm ${platform_arch}
+rc=$?
+if [ $rc != 0 ] ; then
+  echo '--> Build for this architecture is forbidden!'
+  exit 6
+fi
 
 echo '--> Building rpm'
 try_rebuild=true
