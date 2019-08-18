@@ -333,12 +333,14 @@ retry=0
 while $try_rebuild
 do
     $MOCK_BIN --chroot "urpmi.removemedia -a" --resultdir=$OUTPUT_FOLDER
-    $MOCK_BIN --readdrepo -v --configdir $config_dir --resultdir=$OUTPUT_FOLDER
+    # need to add tee > log
+    # because of some weird reason --readdrepo does not place root.log in the proper place
+    $MOCK_BIN --readdrepo -v --configdir $config_dir --resultdir=$OUTPUT_FOLDER 2>&1 | tee $OUTPUT_FOLDER/build.log.tmp
     $MOCK_BIN -v --configdir=$config_dir --rebuild $OUTPUT_FOLDER/*.src.rpm --no-cleanup-after --no-clean $extra_build_rpm_options --resultdir=$OUTPUT_FOLDER
     rc=${PIPESTATUS[0]}
     try_rebuild=false
     if [[ $rc != 0 && $retry < $MAX_RETRIES ]] ; then
-	if grep -q "$RETRY_GREP_STR" $OUTPUT_FOLDER/root.log; then
+	if grep -q "$RETRY_GREP_STR" $OUTPUT_FOLDER/build.log.tmp; then
 	    try_rebuild=true
 	    (( retry=$retry+1 ))
 	    echo "--> Repository was changed in the middle, will rerun the build. Next try (${retry} from ${MAX_RETRIES})..."
