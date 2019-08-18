@@ -257,7 +257,7 @@ arm_platform_detector
 
 MAX_RETRIES=10
 WAIT_TIME=60
-RETRY_GREP_STR="You may need to update your urpmi database\|problem reading synthesis file of medium\|retrieving failed: "
+RETRY_GREP_STR="You may need to update your urpmi database\|problem reading synthesis file of medium\|retrieving failed: |retrieval of\"
 
 if [ "$rerun_tests" = 'true' ]; then
     test_rpm
