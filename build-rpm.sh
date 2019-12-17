@@ -336,7 +336,7 @@ do
     # need to add tee > log
     # because of some weird reason --readdrepo does not place root.log in the proper place
     $MOCK_BIN --readdrepo -v --configdir $config_dir --resultdir=$OUTPUT_FOLDER 2>&1 | tee $OUTPUT_FOLDER/build.log.tmp
-    $MOCK_BIN -v --configdir=$config_dir --rebuild $OUTPUT_FOLDER/*.src.rpm --no-cleanup-after --no-clean $extra_build_rpm_options --resultdir=$OUTPUT_FOLDER
+    $MOCK_BIN -v --configdir=$config_dir --rebuild $OUTPUT_FOLDER/*.src.rpm --no-cleanup-after $extra_build_rpm_options --resultdir=$OUTPUT_FOLDER
     rc=${PIPESTATUS[0]}
     try_rebuild=false
     if [[ $rc != 0 && $retry < $MAX_RETRIES ]] ; then
