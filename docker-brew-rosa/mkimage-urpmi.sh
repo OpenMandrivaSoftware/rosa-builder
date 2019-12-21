@@ -1,187 +1,158 @@
 #!/usr/bin/env bash
+set -x
 #
-set -e
+# Script to create Rosa Linux base images for integration with VM containers (docker, lxc , etc.).
+# 
+# Based on mkimage-urpmi.sh (https://github.com/juanluisbaptiste/docker-brew-mageia)
+#
 
-mkimg="$(basename "$0")"
+set -efu
 
-usage() {
-    echo >&2 "usage: $mkimg --rootfs=rootfs_path --version=openmandriva_version [--mirror=url]"
-    echo >&2 "       $mkimg --rootfs=/tmp/rootfs --version=3.0 --arch=x86_64 --with-updates"
-    echo >&2 "       $mkimg --rootfs=/tmp/rootfs --version=openmandriva2014.0 --arch=x86_64"
-    echo >&2 "       $mkimg --rootfs=. --version=cooker --mirror=http://abf-downloads.openmandriva.org/cooker/repository/x86_64/main/release/"
-    echo >&2 "       $mkimg --rootfs=. --version=cooker"
-    exit 1
-}
-
-optTemp=$(getopt --options '+d,v:,m:,a:,s,u,U,p,h,+x' --longoptions 'rootfs:,version:,mirror:,arch:,with-systemd,with-updates,without-user,with-passwd,help,extra-package:' --name mkimage-urpmi -- "$@")
-eval set -- "$optTemp"
-unset optTemp
-
-extra_packages=""
-
-while true; do
-    case "$1" in
-	-d|--rootfs) rootfsdir=$2 ; shift 2 ;;
-	-v|--version) installversion="$2" ; shift 2 ;;
-	-m|--mirror) mirror="$2" ; shift 2 ;;
-	-a|--arch) arch="$2" ; shift 2 ;;
-	-s|--with-systemd) systemd=systemd ; shift ;;
-	-u|--with-updates) updates=true ; shift ;;
-	-u|--with-passwd) passwd=true ; shift ;;
-	-U|--without-user) without_user=true ; shift ;;
-	-h|--help) usage ;;
-	-x|--extra-package) extra_packages="$extra_packages $2" ; shift 2 ;;
-	--) shift ; break ;;
-    esac
-done
-
-target_dir="$rootfsdir/rootfs"
-
-errorCatch() {
-    echo "Error catched. Exiting"
-    rm -rf $target_dir
-    exit 1
-}
-
-trap errorCatch ERR SIGHUP SIGINT SIGTERM
-
-if [ -z $installversion ]; then
-# Attempt to match host version
-    if [ -r /etc/distro-release ]; then
-	installversion="$(rpm --eval %distro_release)"
-    else
-	echo "Error: no version supplied and unable to detect host openmandriva version"
+if [ "$(id -u)" != "0" ]; then
+	echo "Please run as root. Example: sudo ./mkimage-urpmi.sh"
 	exit 1
-    fi
 fi
 
-if [ -z $mirror ]; then
-# No repo provided, use main
-    mirror=http://abf-downloads.openmandriva.org/$installversion/repository/$arch/main/release/
-    update_mirror=http://abf-downloads.openmandriva.org/$installversion/repository/$arch/main/updates/
+arch="${arch:-x86_64}"
+imgType="${imgType:-min}"
+rosaVersion="${rosaVersion:-rosa2016.1}"
+outDir="${outDir:-"."}"
+packagesList="${packagesList:-basesystem-minimal urpmi bash vim-minimal termcap initscripts systemd}"
+addPackages="${addPackages:-""}"
+# Example: addRepos="repoName1;http://repo.url/ repoName2;http://repo.url/"
+addRepos="${addRepos:-""}"
+brandingPackages="${brandingPackages:-branding-configs-fresh}"
+if [ -n "$addPackages" ]; then packagesList="${packagesList} ${addPackages}"; fi
+if [ -n "$brandingPackages" ]; then packagesList="${packagesList} ${brandingPackages}"; fi
+mirror="${mirror:-http://abf-downloads.rosalinux.ru/}"
+repo="${repo:-${mirror}/${rosaVersion}/repository/${arch}/}"
+outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
+rootfsDir="${rootfsDir:-./BUILD_${outName}}"
+tarFile="${outName}.tar.xz"
+sqfsFile="${outName}.sqfs"
+systemd_networkd="${systemd_networkd:-1}"
+rootfsPackTarball="${rootfsPackTarball:-1}"
+rootfsPackSquash="${rootfsPackSquash:-1}"
+rootfsXzCompressLevel="${rootfsXzCompressLevel:-6}"
+rootfsXzThreads="${rootfsXzThreads:-0}"
+rootfsSquashCompressAlgo="${rootfsSquashCompressAlgo:-xz}"
+rootfsSquashBlockSize="${rootfsSquashBlockSize:-512K}"
+clean_rootfsDir="${clean_rootfsDir:-1}"
+
+# Ensure that rootfsDir from previous build will not be reused
+if [ "$clean_rootfsDir" = 1 ]; then
+	umount "${rootfsDir}/dev" || :
+	rm -fr "$rootfsDir"
 fi
 
+urpmi.addmedia --distrib \
+	--mirrorlist "$repo" \
+	--urpmi-root "$rootfsDir"
 
-# run me here
-install_chroot(){
-    urpmi.addmedia main_release $mirror --urpmi-root "$target_dir";
-if [ ! -z $updates ]; then
-    urpmi.addmedia main_updates $update_mirror --urpmi-root "$target_dir";
+if [ -n "$addRepos" ]; then
+	while read -r line
+	do
+		repoName="$(echo "$line" | awk -F ';' '{print $1}')"
+		repoUrl="$(echo "$line" | awk -F ';' '{print $2}')"
+		if [ -z "$repoName" ] || [ -z "$repoUrl" ]; then
+			echo "Incorrect repository line ${line}, use a correct form: repoName;http://repo.url/"
+			return 1
+		fi
+		urpmi.addmedia \
+			--urpmi-root "$rootfsDir" \
+			"$repoName" "$repoUrl"
+		unset repoName repoUrl
+	done <<< "$(echo "$addRepos" | tr ' ' '\n')"
 fi
-    urpmi basesystem-minimal passwd urpmi distro-release-OpenMandriva locales locales-en $systemd \
-	--auto \
-	--no-suggests \
-	--no-verify-rpm \
-	--urpmi-root "$target_dir" \
-	--root "$target_dir"
 
-    if [[ $? != 0 ]]; then
-	echo "Creating urpmi chroot failed."
-	errorCatch
-    fi
+#########################################################
+# try to workaround urpmi bug due to which it randomly
+# can't resolve dependencies during bootstrap
+urpmi_bootstrap(){
+	for urpmi_options in \
+		"--auto --no-suggests --allow-force --allow-nodeps --ignore-missing" \
+		"--auto --no-suggests"
+	do
+		urpmi --urpmi-root "$rootfsDir" \
+			${urpmi_options} \
+			${packagesList}
+		urpmi_return_code="$?"
+	done
 }
-
-arm_platform_detector(){
-
-filestore_url="http://file-store.openmandriva.org/api/v1/file_stores"
-
-probe_cpu() {
-cpu="$(uname -m)"
-case "$cpu" in
-   i386|i486|i586|i686|i86pc|BePC|x86_64)
-      cpu="i386"
-   ;;
-   armv[4-9]*)
-      cpu="arm"
-   ;;
-   aarch64)
-      cpu="aarch64"
-   ;;
-esac
-
-# create path
-if [[ "$arch" == "aarch64" ]]; then
-    if [ $cpu != "aarch64" ] ; then
-	mkdir -p $target_dir/usr/bin/
-        sudo sh -c "echo '$arch-mandriva-linux-gnueabi' > /etc/rpm/platform"
-	cp /usr/bin/qemu-static-aarch64 $target_dir/usr/bin/
-    fi
+# temporarily don't fail the whole scripts when not last iteration of urpmi fails
+set +e
+for i in $(seq 1 10)
+do
+	urpmi_bootstrap
+	if [ "${urpmi_return_code}" = 0 ]; then
+		echo "urpmi iteration #${i} was successfull."
+		break
+	fi
+done
+# now check the return code of the _last_ urpmi iteration
+if [ "${urpmi_return_code}" != 0 ]; then
+	echo "urpmi bootstrapping failed!"
+	exit 1
 fi
+# return failing the whole script on any error
+set -e
+#########################################################
 
-if [[ "$arch" == "armv7hl" ]]; then
-    if [ $cpu != "arm" ] ; then
-	mkdir -p $target_dir/usr/bin/
-        sudo sh -c "echo '$arch-mandriva-linux-gnueabi' > /etc/rpm/platform"
-	cp /usr/bin/qemu-static-arm $target_dir/usr/bin/
-    fi
-fi
-}
-probe_cpu
-}
-
-arm_platform_detector
-install_chroot
-
-if [ ! -z $systemd ]; then
-    echo -e "--------------------------------------"
-    echo -e "Creating image with systemd support."
-    echo -e "--------------------------------------\n"
-    systemd="systemd"
-fi
-
-if [ ! -z $systemd ]; then
-# Prevent systemd from starting unneeded services
-    (cd $target_dir/lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
-	rm -f $target_dir/lib/systemd/system/multi-user.target.wants/*;\
-	rm -f $target_dir/etc/systemd/system/*.wants/*;\
-	rm -f $target_dir/lib/systemd/system/local-fs.target.wants/*; \
-	rm -f $target_dir/lib/systemd/system/sockets.target.wants/*udev*; \
-	rm -f $target_dir/lib/systemd/system/sockets.target.wants/*initctl*; \
-	rm -f $target_dir/lib/systemd/system/basic.target.wants/*;\
-	rm -f $target_dir/lib/systemd/system/anaconda.target.wants/*;
-fi
-
-if [ -d "$target_dir/etc/sysconfig" ]; then
-# allow networking init scripts inside the container to work without extra steps
-    echo 'NETWORKING=yes' > "$target_dir/etc/sysconfig/network"
-fi
+  pushd "$rootfsDir"
+  
+  # Clean 
+	#  urpmi cache
+	rm -rf var/cache/urpmi
+	mkdir -p --mode=0755 var/cache/urpmi
+	rm -rf etc/ld.so.cache var/cache/ldconfig
+	mkdir -p --mode=0755 var/cache/ldconfig
+ popd
 
 # make sure /etc/resolv.conf has something useful in it
-mkdir -p "$target_dir/etc"
-cat > "$target_dir/etc/resolv.conf" <<'EOF'
+mkdir -p "$rootfsDir/etc"
+cat > "$rootfsDir/etc/resolv.conf" <<'EOF'
 nameserver 8.8.8.8
+nameserver 77.88.8.8
 nameserver 8.8.4.4
+nameserver 77.88.8.1
 EOF
 
-if [ ! -z "$without_user" ]; then
-	# Create user omv, password omv
-	echo 'omv:x:1001:1001::/home/omv:/bin/bash' >>"$target_dir"/etc/passwd
-	echo 'omv:$6$rG3bQ92hkTNubV1p$5qPB9FoXBhNcSE1FOklCoEDowveAgjSf2cHYVwCENZaWtgpFQaRRRN5Ihwd8nuaKMdA1R1XouOasJ7u5dbiGt0:17302:0:99999:7:::' >>"$target_dir"/etc/shadow
-	echo 'omv:x:1001:' >>"$target_dir"/etc/group
-	sed -i -e 's,wheel:x:10:$,wheel:x:10:omv,' "$target_dir"/etc/group
+# Fix SSL in chroot (/dev/urandom is needed)
+mount --bind -v -o ro /dev "${rootfsDir}/dev"
+# Let's make sure that all packages have been installed
+chroot "$rootfsDir" /bin/sh -c "urpmi ${packagesList} --auto --no-suggests --clean"
+
+# clean-up
+for i in dev sys proc; do
+	umount "${rootfsDir}/${i}" || :
+	rm -fr "${rootfsDir:?}/${i:?}/*"
+done
+
+# systemd-networkd makes basic network configuration automatically
+# After it, you can either make /etc/systemd/network/*.conf or
+# `systemctl enable dhclient@eth0`, where eth0 is your network interface from `ip a`
+if [ "$systemd_networkd" != 0 ]; then
+	chroot "$rootfsDir" /bin/sh -c "systemctl enable systemd-networkd"
+	# network.service is generated by systemd-sysv-generator from /etc/rc.d/init.d/network
+	chroot "$rootfsDir" /bin/sh -c "systemctl mask network.service"
 fi
 
-if [ ! -z "$passwd" ]; then
-	ROOT_PASSWD="root"
-	echo "change password to $ROOT_PASSWD"
-	sudo chroot $target_dir /bin/bash -c "echo '$ROOT_PASSWD' |passwd root --stdin"
-
-	cat << EOF > "$target_dir"/README.omv
-OpenMandriva $installversion distro
-default login\password is root:root
-You must change it!
-EOF
+# disable pam_securetty to allow logging in as root via `systemd-nspawn -b`
+# https://bugzilla.rosalinux.ru/show_bug.cgi?id=9631
+# https://github.com/systemd/systemd/issues/852
+if grep -q 'pam_securetty.so' "${rootfsDir}/etc/pam.d/login"; then
+	sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
 fi
 
-if [ ! -z $systemd ]; then
-    tarFile="$rootfsdir/rootfs-${arch}-systemd.tar.xz"
-else
-    tarFile="$rootfsdir/rootfs-${arch}.tar.xz"
+( set -x
+if [ "$rootfsPackTarball" != 0 ]; then
+	env XZ_OPT="-${rootfsXzCompressLevel} --threads=${rootfsXzThreads} -v" \
+		tar cJf "${outDir}/${tarFile}" --numeric-owner --transform='s,^./,,' --directory="$rootfsDir" .
+	ln -sf "$tarFile" "./rootfs.tar.xz" || :
+fi
+if [ "$rootfsPackSquash" != 0 ]; then
+	mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp "$rootfsSquashCompressAlgo" -b "$rootfsSquashBlockSize"
 fi
 
-pushd $target_dir
-rm -fv usr/bin/qemu-*
-tar --numeric-owner -caf $tarFile -c .
-popd
-rm -rf $target_dir
-rm -fv /etc/rpm/platform
+rm -rf "$rootfsDir"
+)

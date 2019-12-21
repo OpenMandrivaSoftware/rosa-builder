@@ -1,12 +1,16 @@
-FROM rosalab/rosa2019.1
+FROM rosalab/rosa2016.1
 
-RUN urpmi --auto --auto-update --no-verify-rpm \
+RUN rm -rfv /var/lib/rpm \
+ && urpmi.removemedia -a \
+ && urpmi.addmedia main_release http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/main/release/ \
+ && urpmi.addmedia main_updates http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/main/updates \
+ && urpmi.addmedia main_testing http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/main/testing \
+ && urpmi.addmedia corp_test_personal http://abf-downloads.rosalinux.ru/corp_test_personal/repository/rosa2016.1/x86_64/main/release
+ && urpmi --auto --auto-update --no-verify-rpm \
  && rm -f /etc/localtime \
  && ln -s /usr/share/zoneinfo/UTC /etc/localtime \
- && urpmi.addmedia builder http://abf-downloads.rosalinux.ru/rosa2016.1/repository/x86_64/main/testing/ \
- && urpmi --no-suggests --no-verify-rpm --auto mock-urpm git valgrind curl sudo builder-c xz timezone \
+ && urpmi --no-suggests --no-verify-rpm --auto mock-urpm git curl sudo builder-c xz timezone \
  && sed -i 's!openmandriva.org!rosalinux.ru!g' /etc/builder-c/filestore_upload.sh \
- && sed -i 's!file-store!abf-n-file-store!g' /etc/builder-c/filestore_upload.sh \
  && sed -i -e "s/Defaults    requiretty.*/ #Defaults    requiretty/g" /etc/sudoers \
  && groupadd mock \
  && echo "%mock ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
