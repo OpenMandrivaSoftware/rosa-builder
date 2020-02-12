@@ -257,7 +257,7 @@ arm_platform_detector
 
 MAX_RETRIES=10
 WAIT_TIME=60
-RETRY_GREP_STR="You may need to update your urpmi database\|problem reading synthesis file of medium\|retrieving failed: |retrieval of"
+RETRY_GREP_STR="You may need to update your urpmi database|problem reading synthesis file of medium|retrieving failed: |retrieval of|error while checking dependencies"
 
 if [ "$rerun_tests" = 'true' ]; then
     test_rpm
@@ -281,7 +281,7 @@ do
 #	rc=${PIPESTATUS[0]}
 	try_rebuild=false
 	if [[ $rc != 0 && $retry < $MAX_RETRIES ]]; then
-	    if grep -q "$RETRY_GREP_STR" $OUTPUT_FOLDER/root.log; then
+	    if grep -qE "$RETRY_GREP_STR" $OUTPUT_FOLDER/root.log; then
 		try_rebuild=true
 		(( retry=$retry+1 ))
 		echo "--> Repository was changed in the middle, will rerun the build. Next try (${retry} from ${MAX_RETRIES})..."
@@ -297,7 +297,7 @@ do
     rc=${PIPESTATUS[0]}
     try_rebuild=false
     if [[ $rc != 0 && $retry < $MAX_RETRIES ]]; then
-	if grep -q "$RETRY_GREP_STR" $OUTPUT_FOLDER/root.log; then
+	if grep -qE "$RETRY_GREP_STR" $OUTPUT_FOLDER/root.log; then
 	    try_rebuild=true
 	    (( retry=$retry+1 ))
 	    echo "--> Repository was changed in the middle, will rerun the build. Next try (${retry} from ${MAX_RETRIES})..."
@@ -340,7 +340,7 @@ do
     rc=${PIPESTATUS[0]}
     try_rebuild=false
     if [[ $rc != 0 && $retry < $MAX_RETRIES ]] ; then
-	if grep -q "$RETRY_GREP_STR" $OUTPUT_FOLDER/build.log.tmp; then
+	if grep -qE "$RETRY_GREP_STR" $OUTPUT_FOLDER/build.log.tmp; then
 	    try_rebuild=true
 	    (( retry=$retry+1 ))
 	    echo "--> Repository was changed in the middle, will rerun the build. Next try (${retry} from ${MAX_RETRIES})..."
